@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+
+      background-color: #d2c3ff;
+    }
+
+    /* 🔥 FIX 1: Add top spacing */
+    .top-controls {
+      padding: 14px 10px 6px;
+      /* increased top padding */
+      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      margin: 0;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #767678;
+      background: #c7c5c8;
+      color: #1a1a1a;
+      /* Ensures text is readable on grey */
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: #a9a7aa;
+      /* 15% darker for clear feedback */
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+      /* Adds visual thickness */
+      transform: translateY(-1px);
+      /* Subtle lift */
+    }
+
+    button:active {
+      transform: translateY(0);
+      /* "Pressed" feel when clicked */
+      box-shadow: none;
+    }
+
+    /* 🔥 FIX 2: Better code readability */
+    #output {
+      flex: 1;
+      overflow-y: auto;
+
+      padding: 12px;
+      margin: 6px 10px 0;
+
+      background: #1e1e1e;
+      color: #d4d4d4;
+
+      border-radius: 10px;
+      white-space: pre-wrap;
+
+      /* 👇 IMPORTANT */
+      font-size: 14px;
+      /* increased */
+      line-height: 1.6;
+      /* better spacing */
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .bottom-controls {
+      padding: 6px 10px 10px;
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .bottom-controls button {
+      padding: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-controls">
+    <button id="start">Start Inspect</button>
+    <button id="pause">Pause</button>
+    <button id="generate">Generate</button>
+  </div>
+
+  <pre id="output">Click on Start Inspect to select elements</pre>
+
+  <div class="bottom-controls">
+    <button id="reset">Reset</button>
+    <button id="copy">Copy</button>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+
+</html>
