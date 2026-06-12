@@ -49,6 +49,8 @@ if (!window.__pw_selector_installed) {
         }))
         .filter(Boolean);
 
+      //console.log(allSelectors);
+
       chrome.runtime.sendMessage({
         type: "ELEMENTS_GENERATED",
         selectors: allSelectors,

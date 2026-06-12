@@ -39,7 +39,7 @@ document.getElementById("reset").addEventListener("click", async () => {
   chrome.tabs.sendMessage(tab.id, { action: "RESET" });
 
   document.getElementById("output").textContent =
-    "No elements selected yet";
+    "Reset completed (all selections cleared)";
 });
 
 // 📋 Copy output
@@ -155,9 +155,14 @@ ${JSON.stringify(selectors, null, 2)}
 
     console.log("Gemini response:", data);
 
-    const result =
+    let result =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
       "No response from AI";
+
+    result = result
+      .replace(/^```[a-zA-Z]*\n?/, "")
+      .replace(/```$/, "")
+      .trim();
 
     return result;
 
