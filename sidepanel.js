@@ -1,3 +1,5 @@
+import { SAMPLE_POM } from "./samplePOM.js";
+
 // ▶️ Start Inspect
 document.getElementById("start").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -54,207 +56,86 @@ document.getElementById("copy").addEventListener("click", () => {
 });
 
 // 🔥 GEMINI API CALL (NO BACKEND)
-async function generateWithAI(selectors) {
+async function generateWithAI(selectors, pageUrl) {
   try {
-    const stored = await chrome.storage.local.get("currentPageUrl");
-    const url = stored.currentPageUrl || "";
 
     const prompt = `
 You are a senior Playwright automation framework architect.
 
-Generate a STRICT Page Object Model (POM) class in TypeScript.
+Generate a complete Playwright Page Object Model (POM) class in TypeScript.
 
 =====================
-STRICT RULES (MANDATORY)
+REQUIREMENTS
 =====================
 
-1. Output ONLY valid TypeScript code
-2. DO NOT include explanation, markdown, or comments
-3. DO NOT create any wrapper/helper functions (NO reportStep)
-4. DO NOT abstract actions
-5. Each method must directly perform the action
-6. Add async and await as methods are asynchronous
-7. Add meaningful comments before the method (e.g., // Fill First Name input)
-8. Generate the POM Class properly with correct format and syntax
+Output ONLY valid TypeScript code.
+Generate methods only for the selected elements.
+Follow the SAMPLE_POM style exactly.
+Use tryLocators in every method.
+Use FrameLocator when iframeOuterHTML exists.
+Do not generate helper methods.
+Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
+Do not invent locators.
 
 =====================
-IMPORTS
+IMPLEMENTATION GUIDELINES
 =====================
 
-import { Page , FrameLocator , Locator } from '@playwright/test';
-import { tryLocators } from './utils/commonMethods';
+Generate meaningful page class names from the page URL.
+Generate meaningful method names from the selected element.
+Generate meaningful locator array names.
+Generate meaningful resolved locator names.
+Use only locators that can be inferred from the provided DOM content.
+Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath.
+Prefer fewer strong locators over many weak locators.
+Avoid duplicate locators.
+Avoid .first(), .last(), and .nth() unless absolutely necessary.
+Every generated method must include a meaningful console.log after the action.
 
 =====================
-CLASS RULES
+CLASS PATTERN
 =====================
 
-- Generate smart class name based on URL
-- Class MUST be exported:
-  export class <PageName>
-
-- Constructor:
-  private page: Page
+Follow the class structure shown in SAMPLE_POM.
+Generate FrameLocator properties and initialization only when iframe elements exist.
+Generate method names from the selected element, not from parent containers or sections.
 
 =====================
-METHOD RULES
+SAMPLE_POM
 =====================
 
-Each method MUST:
+The SAMPLE_POM is the reference implementation.
 
-1. Define locators array
-2. Call tryLocators
-3. Perform action directly
-4. Add console.log AFTER action
+Observe and follow the SAMPLE_POM as the reference implementation for naming, locator generation, tryLocators usage, FrameLocator usage, logging, formatting, and overall coding style.
 
-=====================
-NAMING CONVENTIONS (STRICT)
-=====================
-
-- Method names MUST follow:
-
-  fill<FieldName>Input
-  click<ElementName>Button
-  click<ElementName>Link
-  check<ElementName>Radio
-  check<ElementName>Checkbox
-  select<ElementName>Dropdown
-
-- Examples:
-
-  fillFirstNameInput
-  fillEmailInput
-  clickSubmitButton
-  checkMaleRadio
-  checkSundayCheckbox
-  selectCountryDropdown
-
-- NEVER use:
-  element, element1, field, data
+${SAMPLE_POM}
 
 =====================
-LOCATOR RULES (STRICT FILTERING)
+PAGE URL
 =====================
 
-- Use MINIMUM 2 and MAXIMUM 5 locators (up to 6 only if necessary)
-
-- PRIORITY ORDER (STRICT):
-
-  1. getByRole
-  2. getByLabel
-  3. getByPlaceholder
-  4. id locator (#id)
-  5. getByText
-  6. name attribute
-  7. CSS locator (only if specific)
-  8. XPath (last fallback only)
-
-- DO NOT use:
-  - onclick attribute
-  - value attribute (unless absolutely required)
-  - generic CSS (e.g., input.form-control)
-  - duplicate locators
-
-- Each locator must be:
-  ✔ unique
-  ✔ stable
-  ✔ meaningful
-
-- If strong locators exist (role/label/id), DO NOT add weak ones unnecessarily
-- Prefer fewer high-quality locators over many weak locators.
-
-- DO NOT duplicate locators
+${pageUrl}
 
 =====================
-LOCATOR ELIMINATION RULE (CRITICAL)
+DOM CONTENT
 =====================
 
-- If ID locator is present → DO NOT include xpath
-- If label/role exists → DO NOT include name/value/css
-- DO NOT include generic css (input.form-control, button.class)
-- DO NOT include xpath if id or label is available
-- Remove weaker locators if stronger ones exist
+Each selected element contains:
 
-- Final locator array must contain ONLY strongest locators
+- iframeOuterHTML
+- elementOuterHTML
 
-=====================
-ACTION RULES
-=====================
+Use elementOuterHTML as the primary source of truth.
 
-- input/textarea → element.fill(value)
-- button/link → element.click()
-- checkbox/radio → element.check()
-- select → element.selectOption(value)
-
-LOCATOR ARRAY RULE:
-
-- Locators MUST be direct Playwright locators
-- DO NOT wrap locators inside functions
-- DO NOT use () => this.page.locator(...)
-- Use only:
-
-  this.page.locator(...)
-  this.page.getByRole(...)
-  this.page.getByLabel(...)
-  this.page.getByPlaceholder(...)
-
-LOGGING RULE:
-
-- After every action, add:
-
-  console.log('<Meaningful message>');
-
-- Examples:
-
-  console.log('Filled First Name input');
-  console.log('Clicked Submit button');
-
-- DO NOT include prefixes like [ACTION]
-
-=====================
-ERROR MESSAGE RULE (STRICT):
-=====================
-
-- Format must be:
-
-  'Unable to find the <ElementName> locator'
-
-- Examples:
-
-  'Unable to find the Name input locator'
-  'Unable to find the Submit button locator'
-  'Unable to find the Male radio locator'
-
-=====================
-VALIDATION RULE
-=====================
-
-If any of these appear, output is INVALID:
-
-- reportStep
-- wrapper functions
-- generic locators
-- wrong naming pattern
-- missing console.log
-
-Regenerate correctly.
-
-=====================
-URL
-=====================
-
-${url}
-
-=====================
-SELECTORS
-=====================
+Use iframeOuterHTML only for FrameLocator generation.
 
 ${JSON.stringify(selectors, null, 2)}
 `;
 
-    const API_KEY = process.env.API_KEY; // 🔥 API Key : AQ.Ab8RN6J2R4uubu7udjDvIxfC5KmrOoC9_t7TrKAVkMG5OVAQTQ
+    const API_KEY = ""; // 🔥 API Key
 
     const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -290,14 +171,10 @@ ${JSON.stringify(selectors, null, 2)}
 chrome.runtime.onMessage.addListener((msg) => {
   console.log("Message received in sidepanel:", msg);
 
-  // Store URL
-  if (msg.type === "PAGE_URL") {
-    chrome.storage.local.set({ currentPageUrl: msg.url });
-  }
-
   if (msg.type === "ELEMENTS_GENERATED") {
 
     const list = msg.selectors;
+    const pageUrl = msg.pageUrl;
 
     if (!list || list.length === 0) {
       document.getElementById("output").textContent =
@@ -310,7 +187,7 @@ chrome.runtime.onMessage.addListener((msg) => {
       "Generating with AI...";
 
     // 🔥 DIRECT GEMINI CALL
-    generateWithAI(list)
+    generateWithAI(list, pageUrl)
       .then((result) => {
         document.getElementById("output").textContent = result;
       })
