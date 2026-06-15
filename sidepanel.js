@@ -64,9 +64,7 @@ You are a senior Playwright automation framework architect.
 
 Generate a complete Playwright Page Object Model (POM) class in TypeScript.
 
-=====================
-REQUIREMENTS
-=====================
+REQUIREMENTS :
 
 Output ONLY valid TypeScript code.
 Generate methods only for the selected elements.
@@ -77,9 +75,7 @@ Do not generate helper methods.
 Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
 Do not invent locators.
 
-=====================
-IMPLEMENTATION GUIDELINES
-=====================
+IMPLEMENTATION GUIDELINES :
 
 Generate meaningful page class names from the page URL.
 Generate meaningful method names from the selected element.
@@ -92,17 +88,13 @@ Avoid duplicate locators.
 Avoid .first(), .last(), and .nth() unless absolutely necessary.
 Every generated method must include a meaningful console.log after the action.
 
-=====================
-CLASS PATTERN
-=====================
+CLASS PATTERN :
 
 Follow the class structure shown in SAMPLE_POM.
 Generate FrameLocator properties and initialization only when iframe elements exist.
 Generate method names from the selected element, not from parent containers or sections.
 
-=====================
-SAMPLE_POM
-=====================
+SAMPLE_POM :
 
 The SAMPLE_POM is the reference implementation.
 
@@ -110,15 +102,11 @@ Observe and follow the SAMPLE_POM as the reference implementation for naming, lo
 
 ${SAMPLE_POM}
 
-=====================
-PAGE URL
-=====================
+PAGE URL :
 
 ${pageUrl}
 
-=====================
-DOM CONTENT
-=====================
+DOM CONTENT :
 
 Each selected element contains:
 
@@ -132,7 +120,7 @@ Use iframeOuterHTML only for FrameLocator generation.
 ${JSON.stringify(selectors, null, 2)}
 `;
 
-    const API_KEY = ""; // 🔥 API Key
+    const API_KEY = "AQ.Ab8RN6JvIsrJCYG9tHuJq6xWI63XIwwcqezTUhnyw12NfvUckg"; // 🔥 API Key
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
