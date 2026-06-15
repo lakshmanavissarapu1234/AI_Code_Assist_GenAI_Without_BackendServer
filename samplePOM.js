@@ -12,38 +12,55 @@ this.page = page;
 this.paymentFrame = page.frameLocator('#payment-frame');
 }
 
-async fillFirstNameInput(value: string) {
- 
-const firstNameInputLocators = [
-  this.page.getByPlaceholder('First Name'),
-  this.page.locator('#firstName')
+async checkSportsCheckbox() {
+
+const sportsCheckboxLocators = [
+  this.page.getByLabel('Sports'),
+  this.page.locator('#sports')
 ];
 
-const firstNameInput = await tryLocators(
-  firstNameInputLocators,
-  'Unable to find the First Name input locator'
+const sportsCheckbox = await tryLocators(
+  sportsCheckboxLocators,
+  'Unable to find the Sports checkbox locator'
 );
 
-await firstNameInput.fill(value);
+await sportsCheckbox.check();
 
-console.log(\`Filled First Name input with: \${value}\`);
+console.log('Checked Sports checkbox');
 }
 
-async clickPayNowButton() {
+async checkMaleRadioButton() {
 
-const payNowButtonLocators = [
-  this.paymentFrame.getByRole('button', { name: 'Pay Now' }),
-  this.paymentFrame.locator('#payNow')
+const maleRadioButtonLocators = [
+  this.page.getByLabel('Male'),
+  this.page.locator('#gender-radio-1')
 ];
 
-const payNowButton = await tryLocators(
-  payNowButtonLocators,
-  'Unable to find the Pay Now button locator'
+const maleRadioButton = await tryLocators(
+  maleRadioButtonLocators,
+  'Unable to find the Male radio button locator'
 );
 
-await payNowButton.click();
+await maleRadioButton.check();
 
-console.log('Clicked Pay Now button');
+console.log('Checked Male radio button');
+}
+
+async selectCardTypeDropdown(cardType: string) {
+
+const cardTypeDropdownLocators = [
+  this.paymentFrame.getByRole('combobox'),
+  this.paymentFrame.locator('#cardType')
+];
+
+const cardTypeDropdown = await tryLocators(
+  cardTypeDropdownLocators,
+  'Unable to find the Card Type dropdown locator'
+);
+
+await cardTypeDropdown.selectOption(cardType);
+
+console.log(\`Selected Card Type: \${cardType}\`);
 }
 }
 `;
