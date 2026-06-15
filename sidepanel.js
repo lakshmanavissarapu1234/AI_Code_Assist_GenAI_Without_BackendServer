@@ -64,67 +64,62 @@ You are a senior Playwright automation framework architect.
 
 Generate a complete Playwright Page Object Model (POM) class in TypeScript.
 
-REQUIREMENTS :
+REQUIREMENTS:
 
-Output ONLY valid TypeScript code.
-Generate methods only for the selected elements.
-Follow the SAMPLE_POM style exactly.
-Use tryLocators in every method.
-Use FrameLocator when iframeOuterHTML exists.
-Do not generate helper methods.
-Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
-Do not invent locators.
+- Output ONLY valid TypeScript code.
+- Generate methods strictly for the provided selected elements.
+- Follow the SAMPLE_POM style exactly.
+- Use tryLocators in every method.
+- Use FrameLocator only when iframeOuterHTML exists.
+- Do not generate helper methods.
+- Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
+- Do not invent locators.
 
-IMPLEMENTATION GUIDELINES :
+IMPLEMENTATION GUIDELINES:
 
-Generate meaningful page class names from the page URL.
-Generate meaningful method names from the selected element.
-Generate meaningful locator array names.
-Generate meaningful resolved locator names.
-Use only locators that can be inferred from the provided DOM content.
-Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath. Use only locators that exist in the provided DOM content.
-Use XPath only when no role, text, id, name, css, or Playwright locator can be inferred.
-Prefer fewer strong locators over many weak locators.
-Avoid duplicate locators.
-Avoid .first(), .last(), and .nth() unless absolutely necessary.
-Every generated method must include a meaningful console.log after the action.
-Determine the action and method naming from the element type, role, and meaning.
-Naming mapping : fill<ElementName>Input() , fill<ElementName>Textarea() , select<ElementName>Dropdown() , check<ElementName>Checkbox() , check<ElementName>RadioButton() , click<ElementName>Button() , click<ElementName>Link() , upload<ElementName>().
-Action mapping:
-textbox, email, password, number, textarea → fill
-checkbox → check
-radio → check
-dropdown, combobox → select
-button, link → click
-date picker → selectDate
-file upload → upload
+- Derive meaningful page class names from the page URL.
+- Derive meaningful method names directly from the selected element.
+- Create meaningful locator array names and resolved locator names.
+- Use only locators inferred from the provided DOM content.
+- Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath.
+- Use XPath only when no other locator type can be inferred.
+- Prefer fewer strong locators over multiple weak locators.
+- Avoid duplicate locators.
+- Avoid .first(), .last(), and .nth() unless absolutely necessary.
+- Every generated method must include a meaningful console.log after the action.
+- Determine method naming and action from element type, role, and semantic meaning.
 
-CLASS PATTERN :
+NAMING MAPPING:
+- textbox, email, password, number, textarea → fill<ElementName>Input()/fill<ElementName>Textarea()
+- checkbox → check<ElementName>Checkbox()
+- radio → check<ElementName>RadioButton()
+- dropdown, combobox → select<ElementName>Dropdown()
+- button → click<ElementName>Button()
+- link → click<ElementName>Link()
+- date picker → select<ElementName>Date()
+- file upload → upload<ElementName>()
 
-Follow the class structure shown in SAMPLE_POM.
-Generate FrameLocator properties and initialization only when iframe elements exist.
-Generate method names from the selected element, not from parent containers or sections.
+CLASS PATTERN:
 
-SAMPLE_POM :
+- Follow the SAMPLE_POM class structure exactly.
+- Generate FrameLocator properties and initialization only when iframe elements exist.
+- Method names must come from the selected element, not parent containers or sections.
 
-The SAMPLE_POM is the reference implementation.
-Observe and follow the SAMPLE_POM as the reference implementation for naming, locator generation, tryLocators usage, FrameLocator usage, logging, formatting, and overall coding style.
+REFERENCE:
 
+SAMPLE_POM:
 ${SAMPLE_POM}
 
-PAGE URL :
-
+PAGE URL:
 ${pageUrl}
 
-DOM CONTENT :
+DOM CONTENT:
 
 Each selected element contains:
-
 - iframeOuterHTML
 - elementOuterHTML
 
 Use elementOuterHTML as the primary source of truth.
-
 Use iframeOuterHTML only for FrameLocator generation.
 
 ${JSON.stringify(selectors, null, 2)}
