@@ -82,13 +82,22 @@ Generate meaningful method names from the selected element.
 Generate meaningful locator array names.
 Generate meaningful resolved locator names.
 Use only locators that can be inferred from the provided DOM content.
-Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath.
+Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath. Use only locators that exist in the provided DOM content.
+Use XPath only when no role, text, id, name, css, or Playwright locator can be inferred.
 Prefer fewer strong locators over many weak locators.
 Avoid duplicate locators.
 Avoid .first(), .last(), and .nth() unless absolutely necessary.
 Every generated method must include a meaningful console.log after the action.
-Determine the action and method naming from the element type, role, and meaning.For dropdown and combobox elements, use select actions and generate select<ElementName>Dropdown methods.
-Examples: Sports checkbox → checkSportsCheckbox(), Male radio → checkMaleRadioButton(), Country dropdown → selectCountryDropdown(), First Name input → fillFirstNameInput(), Submit button → clickSubmitButton().
+Determine the action and method naming from the element type, role, and meaning.
+Naming mapping : fill<ElementName>Input() , fill<ElementName>Textarea() , select<ElementName>Dropdown() , check<ElementName>Checkbox() , check<ElementName>RadioButton() , click<ElementName>Button() , click<ElementName>Link() , upload<ElementName>().
+Action mapping:
+textbox, email, password, number, textarea → fill
+checkbox → check
+radio → check
+dropdown, combobox → select
+button, link → click
+date picker → selectDate
+file upload → upload
 
 CLASS PATTERN :
 
@@ -99,7 +108,6 @@ Generate method names from the selected element, not from parent containers or s
 SAMPLE_POM :
 
 The SAMPLE_POM is the reference implementation.
-
 Observe and follow the SAMPLE_POM as the reference implementation for naming, locator generation, tryLocators usage, FrameLocator usage, logging, formatting, and overall coding style.
 
 ${SAMPLE_POM}
@@ -122,7 +130,7 @@ Use iframeOuterHTML only for FrameLocator generation.
 ${JSON.stringify(selectors, null, 2)}
 `;
 
-    const API_KEY = ""; // 🔥 API Key
+    const API_KEY = "AQ.Ab8RN6KUcxo0IxwHqJbKCbmXohnImJDLfQj-nGJB8jSVEuk9mQ"; // 🔥 API Key
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
