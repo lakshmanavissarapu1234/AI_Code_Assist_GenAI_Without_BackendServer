@@ -89,15 +89,15 @@ IMPLEMENTATION GUIDELINES:
 - Every generated method must include a meaningful console.log after the action.
 - Determine method naming and action from element type, role, and semantic meaning.
 
-NAMING MAPPING:
-- textbox, email, password, number, textarea → fill<ElementName>Input()/fill<ElementName>Textarea()
-- checkbox → check<ElementName>Checkbox()
-- radio → check<ElementName>RadioButton()
-- dropdown, combobox → select<ElementName>Dropdown()
-- button → click<ElementName>Button()
-- link → click<ElementName>Link()
-- date picker → select<ElementName>Date()
-- file upload → upload<ElementName>()
+ACTION AND NAMING PATTERN:
+- textbox, email, password, number, textarea → fill → fill<ElementName>Input()/fill<ElementName>Textarea()
+- checkbox → check → check<ElementName>Checkbox()
+- radio → check → check<ElementName>RadioButton()
+- dropdown, combobox → select → select<ElementName>Dropdown()
+- button → click → click<ElementName>Button()
+- link → click → click<ElementName>Link()
+- date picker → select → select<ElementName>Date()
+- file upload → upload → upload<ElementName>()
 
 CLASS PATTERN:
 
