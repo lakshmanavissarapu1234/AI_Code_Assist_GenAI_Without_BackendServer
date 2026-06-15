@@ -87,6 +87,8 @@ Prefer fewer strong locators over many weak locators.
 Avoid duplicate locators.
 Avoid .first(), .last(), and .nth() unless absolutely necessary.
 Every generated method must include a meaningful console.log after the action.
+Determine the action and method naming from the element type, role, and meaning.For dropdown and combobox elements, use select actions and generate select<ElementName>Dropdown methods.
+Examples: Sports checkbox → checkSportsCheckbox(), Male radio → checkMaleRadioButton(), Country dropdown → selectCountryDropdown(), First Name input → fillFirstNameInput(), Submit button → clickSubmitButton().
 
 CLASS PATTERN :
 
