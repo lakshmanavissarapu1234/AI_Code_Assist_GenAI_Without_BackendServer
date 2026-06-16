@@ -93,7 +93,12 @@ ACTION AND NAMING PATTERN:
 - textbox, email, password, number, textarea → fill → fill<ElementName>Input()/fill<ElementName>Textarea()
 - checkbox → check → check<ElementName>Checkbox()
 - radio → check → check<ElementName>RadioButton()
-- dropdown, combobox → select → select<ElementName>Dropdown()
+- dropdown, combobox → select<ElementName>Dropdown(value)
+- Use selectOption(value) only for native HTML <select> elements.
+- For React, custom, and combobox-based dropdowns, generate a single select<ElementName>Dropdown(value) method that opens the dropdown and selects the option using the provided parameter value.
+- If dropdown options, menu items, or list options are also selected, treat them as values of the parent dropdown and do not generate separate methods for individual options.
+- For React Select and autocomplete-based dropdowns that contain an input or combobox element, enter the provided value and select the matching option.
+- Prefer using the parameter value instead of generating hardcoded option locators.
 - button → click → click<ElementName>Button()
 - link → click → click<ElementName>Link()
 - date picker → select → select<ElementName>Date()
@@ -116,10 +121,13 @@ ${pageUrl}
 DOM CONTENT:
 
 Each selected element contains:
+
 - iframeOuterHTML
 - elementOuterHTML
+- parentOuterHTML
 
 Use elementOuterHTML as the primary source of truth.
+Use parentOuterHTML as additional context for understanding labels, containers, dropdowns, radios, checkboxes, and other related controls.
 Use iframeOuterHTML only for FrameLocator generation.
 
 ${JSON.stringify(selectors, null, 2)}

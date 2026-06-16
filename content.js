@@ -44,7 +44,10 @@ if (!window.__pw_selector_installed) {
               ? window.frameElement?.outerHTML || ""
               : "",
 
-          elementOuterHTML: el.outerHTML
+          elementOuterHTML: el.outerHTML,
+
+          parentOuterHTML:
+            el.parentElement?.outerHTML || ""
 
         }))
         .filter(Boolean);
