@@ -1,4 +1,50 @@
-import { SAMPLE_POM } from "./samplePOM.js";
+import { SAMPLE_POM_TYPESCRIPT, SAMPLE_POM_JAVA, SAMPLE_POM_PYTHON, SAMPLE_POM_CSHARP } from "./samplePOM.js";
+
+// 💾 Load saved language and framework on startup
+document.addEventListener("DOMContentLoaded", () => {
+  chrome.storage.local.get(["language", "framework"], (data) => {
+    if (data.language) {
+      document.getElementById("language-select").value = data.language;
+    }
+    if (data.framework) {
+      document.getElementById("framework-select").value = data.framework;
+    }
+  });
+
+  // Check active tab on load and hide/show buttons accordingly
+  const activeTab = document.querySelector(".tab-btn.active");
+  if (activeTab && activeTab.dataset.tab === "config-panel") {
+    document.querySelector(".top-controls").style.display = "none";
+    document.querySelector(".bottom-controls").style.display = "none";
+  }
+});
+
+// 🔀 Tab switching
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+
+    // Hide buttons when Configuration tab is active
+    const isConfig = btn.dataset.tab === "config-panel";
+    document.querySelector(".top-controls").style.display = isConfig ? "none" : "flex";
+  });
+});
+
+// 💾 Save language selection when changed
+document.getElementById("language-select").addEventListener("change", () => {
+  const language = document.getElementById("language-select").value;
+  chrome.storage.local.set({ language });
+});
+
+// 💾 Save framework selection when changed
+document.getElementById("framework-select").addEventListener("change", () => {
+  const framework = document.getElementById("framework-select").value;
+  chrome.storage.local.set({ framework });
+});
 
 // ▶️ Start Inspect
 document.getElementById("start").addEventListener("click", async () => {
@@ -56,20 +102,37 @@ document.getElementById("copy").addEventListener("click", () => {
 });
 
 // 🔥 GEMINI API CALL (NO BACKEND)
-async function generateWithAI(selectors, pageUrl) {
+async function generateWithAI(selectors, pageUrl, language) {
   try {
+
+    const samplePOMMap = {
+      typescript: SAMPLE_POM_TYPESCRIPT,
+      java: SAMPLE_POM_JAVA,
+      python: SAMPLE_POM_PYTHON,
+      csharp: SAMPLE_POM_CSHARP
+    };
+
+    const languageLabelMap = {
+      typescript: "TypeScript",
+      java: "Java",
+      python: "Python",
+      csharp: "C#"
+    };
+
+    const selectedSample = samplePOMMap[language] || SAMPLE_POM_TYPESCRIPT;
+    const selectedLanguageLabel = languageLabelMap[language] || "TypeScript";
 
     const prompt = `
 You are a senior Playwright automation framework architect.
 
-Generate a complete Playwright Page Object Model (POM) class in TypeScript.
+Generate a complete Playwright Page Object Model (POM) class in ${selectedLanguageLabel}.
 
 REQUIREMENTS:
 
-- Output ONLY valid TypeScript code.
+- - Output ONLY valid ${selectedLanguageLabel} code.
 - Generate methods strictly for the provided selected elements.
 - Follow the SAMPLE_POM style exactly.
-- Use tryLocators in every method.
+- Use tryLocators in every method (only for TypeScript, skip for other languages).
 - Use FrameLocator only when iframeOuterHTML exists.
 - Do not generate helper methods.
 - Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
@@ -81,7 +144,10 @@ IMPLEMENTATION GUIDELINES:
 - Derive meaningful method names directly from the selected element.
 - Create meaningful locator array names and resolved locator names.
 - Use only locators inferred from the provided DOM content.
-- Locator priority: getByRole > getByLabel > getByPlaceholder > id > getByText > name > css > xpath.
+- For Java: use Playwright Java API (com.microsoft.playwright). Follow the SAMPLE_POM structure exactly.
+- For Python: use Playwright Python API (playwright.sync_api). Follow the SAMPLE_POM structure exactly.
+- For C#: use Playwright C# API (Microsoft.Playwright). Follow the SAMPLE_POM structure exactly.
+- Always follow the SAMPLE_POM language style strictly. Do not mix languages.
 - Use XPath only when no other locator type can be inferred.
 - Prefer fewer strong locators over multiple weak locators.
 - Avoid duplicate locators.
@@ -113,7 +179,7 @@ CLASS PATTERN:
 REFERENCE:
 
 SAMPLE_POM:
-${SAMPLE_POM}
+${selectedSample}
 
 PAGE URL:
 ${pageUrl}
@@ -193,10 +259,20 @@ chrome.runtime.onMessage.addListener((msg) => {
       "Generating with AI...";
 
     // 🔥 DIRECT GEMINI CALL
-    generateWithAI(list, pageUrl)
+    const language = document.getElementById("language-select").value;
+    const output = document.getElementById("output");
+    output.className = `language-${language === "csharp" ? "csharp" : language}`;
+
+    generateWithAI(list, pageUrl, language)
       .then((result) => {
         const output = document.getElementById("output");
         output.textContent = result;
+        // Switch to Output tab automatically
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        document.querySelector("[data-tab='output-panel']").classList.add("active");
+        document.getElementById("output-panel").classList.add("active");
+
         if (window.hljs) {
           delete output.dataset.highlighted;
           window.hljs.highlightElement(output);

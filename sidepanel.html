@@ -17,6 +17,7 @@
       background-color: #d2c3ff;
     }
 
+    /* Top buttons */
     .top-controls {
       padding: 14px 10px 6px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.15);
@@ -48,11 +49,62 @@
       box-shadow: none;
     }
 
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      padding: 10px 10px 0;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-bottom: none;
+      background: #bfb0f0;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s ease;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tab-btn:hover {
+      background: #a99de0;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tab-btn.active {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-color: #444;
+    }
+
+    /* Tab content panels */
+    .tab-panel {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+      margin: 0 10px 0;
+      border-radius: 0 8px 8px 8px;
+    }
+
+    .tab-panel.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Output panel */
     .code-wrapper {
       flex: 1;
       overflow: hidden;
-      margin: 6px 10px 0;
-      border-radius: 10px;
+      border-radius: 0 8px 8px 8px;
+      background: #1e1e1e;
     }
 
     .code-wrapper pre {
@@ -60,8 +112,8 @@
       padding: 0;
       height: 100%;
       overflow-y: auto;
-      border-radius: 10px;
       background: #1e1e1e !important;
+      border-radius: 0 8px 8px 8px;
     }
 
     #output {
@@ -75,9 +127,48 @@
       font-family: Consolas, "Courier New", monospace;
       padding: 12px !important;
       margin: 0;
-      border-radius: 10px;
+      border-radius: 0 8px 8px 8px;
     }
 
+    /* Configuration panel */
+    .config-panel {
+      flex: 1;
+      background: #ede6ff;
+      border-radius: 0 8px 8px 8px;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .config-group {
+      margin-bottom: 18px;
+    }
+
+    .config-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #3a2d6b;
+      margin-bottom: 6px;
+    }
+
+    .config-group select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #a99de0;
+      background: #fff;
+      color: #1a1a1a;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+
+    .config-group select:focus {
+      border-color: #7c5cbf;
+    }
+
+    /* Bottom buttons */
     .bottom-controls {
       padding: 6px 10px 10px;
       display: flex;
@@ -95,22 +186,57 @@
 
 <body>
 
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="output-panel">Output</button>
+    <button class="tab-btn" data-tab="config-panel">Configuration</button>
+  </div>
+
+  <!-- Top control buttons -->
   <div class="top-controls">
     <button id="start">Start Inspect</button>
     <button id="pause">Pause</button>
     <button id="reset">Reset</button>
   </div>
 
-  <div class="code-wrapper">
-    <pre><code id="output" class="language-typescript">Click on Start Inspect to select elements</code></pre>
+  <!-- Output Tab Panel -->
+  <div class="tab-panel active" id="output-panel">
+    <div class="code-wrapper">
+      <pre><code id="output" class="language-typescript">Click on Start Inspect to select elements</code></pre>
+    </div>
   </div>
 
+  <!-- Configuration Tab Panel -->
+  <div class="tab-panel" id="config-panel">
+    <div class="config-panel">
+
+      <div class="config-group">
+        <label>Framework</label>
+        <select id="framework-select">
+          <option value="playwright" selected>Playwright</option>
+          <option value="selenium">Selenium</option>
+        </select>
+      </div>
+
+      <div class="config-group">
+        <label>Language</label>
+        <select id="language-select">
+          <option value="typescript" selected>TypeScript</option>
+          <option value="java">Java</option>
+          <option value="python">Python</option>
+          <option value="csharp">C#</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom buttons -->
   <div class="bottom-controls">
     <button id="generate">Generate</button>
     <button id="copy">Copy</button>
   </div>
 
-  <!-- highlight.js loaded here BEFORE sidepanel.js -->
   <script src="libs/highlight.min.js"></script>
   <script type="module" src="sidepanel.js"></script>
 </body>
