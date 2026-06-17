@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const activeTab = document.querySelector(".tab-btn.active");
   if (activeTab && activeTab.dataset.tab === "config-panel") {
     document.querySelector(".top-controls").style.display = "none";
-    document.querySelector(".bottom-controls").style.display = "none";
+    document.querySelector(".bottom-controls").style.visibility = "hidden";
   }
 });
 
@@ -29,8 +29,11 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document.getElementById(btn.dataset.tab).classList.add("active");
 
     // Hide buttons when Configuration tab is active
+    // Hide buttons when Configuration tab is active
     const isConfig = btn.dataset.tab === "config-panel";
     document.querySelector(".top-controls").style.display = isConfig ? "none" : "flex";
+    document.querySelector(".bottom-controls").style.display = isConfig ? "none" : "flex";
+    document.querySelector(".bottom-controls").style.visibility = isConfig ? "hidden" : "visible";
   });
 });
 
