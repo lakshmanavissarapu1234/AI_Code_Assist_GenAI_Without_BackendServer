@@ -195,7 +195,12 @@ chrome.runtime.onMessage.addListener((msg) => {
     // 🔥 DIRECT GEMINI CALL
     generateWithAI(list, pageUrl)
       .then((result) => {
-        document.getElementById("output").textContent = result;
+        const output = document.getElementById("output");
+        output.textContent = result;
+        if (window.hljs) {
+          delete output.dataset.highlighted;
+          window.hljs.highlightElement(output);
+        }
       })
       .catch((err) => {
         console.error(err);
