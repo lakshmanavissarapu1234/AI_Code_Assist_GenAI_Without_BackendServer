@@ -56,10 +56,10 @@ PAGE URL:
 ${pageUrl}
 
 DOM CONTENT:
-Each selected element contains iframeOuterHTML, elementOuterHTML, parentOuterHTML.
+Each selected element contains iframeOuterHTML and elementOuterHTML.
 - Use elementOuterHTML as primary source of truth.
-- Use parentOuterHTML for labels, containers, dropdowns context.
 - Use iframeOuterHTML only for FrameLocator generation.
+- Use the PAGE URL above for deriving the class name.
 
 ${JSON.stringify(selectors, null, 2)}
 `;
@@ -119,10 +119,10 @@ PAGE URL:
 ${pageUrl}
 
 DOM CONTENT:
-Each selected element contains iframeOuterHTML, elementOuterHTML, parentOuterHTML.
+Each selected element contains iframeOuterHTML and elementOuterHTML.
 - Use elementOuterHTML as primary source of truth.
-- Use parentOuterHTML for labels, containers, dropdowns context.
 - iframeOuterHTML is not used for Selenium (no FrameLocator in Selenium).
+- Use the PAGE URL above for deriving the class name.
 
 ${JSON.stringify(selectors, null, 2)}
 `;

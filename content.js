@@ -38,21 +38,13 @@ if (!window.__pw_selector_installed) {
 
       const allSelectors = Array.from(selectedElements)
         .map(el => ({
-
           iframeOuterHTML:
             window !== window.top
               ? window.frameElement?.outerHTML || ""
               : "",
-
-          elementOuterHTML: el.outerHTML,
-
-          parentOuterHTML:
-            el.parentElement?.outerHTML || ""
-
+          elementOuterHTML: el.outerHTML
         }))
         .filter(Boolean);
-
-      //console.log(allSelectors);
 
       chrome.runtime.sendMessage({
         type: "ELEMENTS_GENERATED",
