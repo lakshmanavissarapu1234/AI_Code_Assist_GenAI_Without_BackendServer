@@ -177,7 +177,7 @@ document.getElementById("copy").addEventListener("click", () => {
 
 async function generateWithAI(prompt) {
   try {
-    const API_KEY = "AQ.Ab8RN6KUcxo0IxwHqJbKCbmXohnImJDLfQj-nGJB8jSVEuk9mQ";
+    const API_KEY = "";
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
