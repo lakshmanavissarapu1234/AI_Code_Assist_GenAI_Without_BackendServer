@@ -6,105 +6,121 @@
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #d2c3ff;
+      font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+      background-color: #d9eaee;
     }
 
-    /* Top buttons */
-    .top-controls {
-      padding: 14px 10px 6px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    /* ── HEADER ── */
+    .header {
+      padding: 8px 14px 4px;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #143844;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── TAB BAR ── */
+    .tab-bar {
       display: flex;
-      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1.5px solid #b3d4dc;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      padding: 5px 0;
+      margin-right: 16px;
+      border: none;
+      background: transparent;
+      color: #6a9aa8;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1.5px;
+      transition: color 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: #143844;
+    }
+
+    .tab-btn.active {
+      color: #143844;
+      border-bottom: 2px solid #1c6e80;
+    }
+
+    /* ── TOP CONTROLS ── */
+    .top-controls {
+      display: flex;
+      gap: 5px;
+      padding: 6px 14px 4px;
       flex-shrink: 0;
     }
 
     button {
       flex: 1;
-      margin: 0;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #767678;
-      background: #c7c5c8;
-      color: #1a1a1a;
+      padding: 5px 4px;
+      border-radius: 6px;
+      border: 1px solid #aed0d8;
+      background: #ffffff;
+      color: #1c4f5c;
+      font-size: 10px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(20, 56, 68, 0.08);
+      transition: all 0.15s ease;
     }
 
     button:hover {
-      background: #a9a7aa;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+      background: #f4fafb;
+      border-color: #1c6e80;
+      box-shadow: 0 2px 6px rgba(20, 56, 68, 0.15);
       transform: translateY(-1px);
     }
 
     button:active {
       transform: translateY(0);
-      box-shadow: none;
+      box-shadow: 0 1px 2px rgba(20, 56, 68, 0.1);
     }
 
-    /* Tab bar */
-    .tab-bar {
-      display: flex;
-      gap: 0;
-      padding: 10px 10px 0;
-      flex-shrink: 0;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 6px 10px;
-      border-radius: 8px 8px 0 0;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      border-bottom: none;
-      background: #bfb0f0;
-      color: #1a1a1a;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: background 0.2s ease;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .tab-btn:hover {
-      background: #a99de0;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .tab-btn.active {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border-color: #444;
-    }
-
-    /* Tab content panels */
+    /* ── TAB PANELS ── */
     .tab-panel {
       display: none;
       flex: 1;
+      flex-direction: column;
       overflow: hidden;
-      margin: 0 10px 0;
-      border-radius: 0 8px 8px 8px;
+      padding: 0 14px;
     }
 
     .tab-panel.active {
       display: flex;
-      flex-direction: column;
     }
 
-    /* Output panel */
+    /* ── CODE AREA ── */
     .code-wrapper {
       flex: 1;
+      margin: 6px 0 0;
+      border-radius: 8px;
       overflow: hidden;
-      border-radius: 0 8px 8px 8px;
-      background: #1e1e1e;
+      border: 1px solid #84bdca;
+      background: #e9f3f5;
+      display: flex;
+      flex-direction: column;
     }
 
     .code-wrapper pre {
@@ -112,105 +128,203 @@
       padding: 0;
       height: 100%;
       overflow-y: auto;
-      background: #1e1e1e !important;
-      border-radius: 0 8px 8px 8px;
+      background: #e9f3f5 !important;
     }
 
     #output {
       display: block;
       min-height: 100%;
-      background: #1e1e1e !important;
-      color: #d4d4d4 !important;
+      background: #e9f3f5 !important;
+      color: #163f49 !important;
       white-space: pre-wrap;
-      font-size: 14px;
-      line-height: 1.6;
-      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
       padding: 12px !important;
       margin: 0;
-      border-radius: 0 8px 8px 8px;
     }
 
-    /* Configuration panel */
-    .config-panel {
-      flex: 1;
-      background: #ede6ff;
-      border-radius: 0 8px 8px 8px;
-      padding: 16px;
-      overflow-y: auto;
+    /* Override highlight.js theme to match light teal background */
+    .hljs {
+      background: #e9f3f5 !important;
+      color: #163f49 !important;
     }
 
-    .config-group {
-      margin-bottom: 18px;
+    .hljs-keyword, .hljs-built_in, .hljs-type { color: #1a5a8a !important; }
+    .hljs-string, .hljs-attr { color: #8a4f1a !important; }
+    .hljs-title, .hljs-title.class_, .hljs-title.function_ { color: #1c6e80 !important; }
+    .hljs-comment { color: #6f8f93 !important; }
+    .hljs-number, .hljs-literal { color: #6a3f9a !important; }
+    .hljs-variable, .hljs-params { color: #163f49 !important; }
+
+    /* ── CUSTOM PROMPT BOX ── */
+    .custom-prompt-wrapper {
+      padding: 5px 0 0;
+      flex-shrink: 0;
     }
 
-    .config-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #3a2d6b;
-      margin-bottom: 6px;
-    }
-
-    .config-group select {
+    #custom-prompt {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #a99de0;
-      background: #fff;
-      color: #1a1a1a;
-      font-size: 13px;
-      cursor: pointer;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid #b3d4dc;
+      background: #e9f3f5;
+      color: #163f49;
+      font-size: 10.5px;
+      font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+      padding: 6px 9px;
+      resize: none;
       outline: none;
       transition: border 0.2s ease;
+      line-height: 1.3;
     }
 
-    .config-group select:focus {
-      border-color: #7c5cbf;
+    #custom-prompt:focus {
+      border-color: #1c6e80;
     }
 
-    /* Bottom buttons */
+    #custom-prompt::placeholder {
+      color: #7fa9b3;
+      font-size: 10.5px;
+    }
+
+    /* ── BOTTOM CONTROLS ── */
     .bottom-controls {
-      padding: 6px 10px 10px;
       display: flex;
-      gap: 10px;
-      margin-top: 4px;
+      gap: 5px;
+      padding: 6px 14px 8px;
       flex-shrink: 0;
     }
 
     .bottom-controls button {
       padding: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    #generate {
+      background: #1c6e80;
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 2px 5px rgba(20, 56, 68, 0.25);
+    }
+
+    #generate:hover {
+      background: #185c6c;
+      box-shadow: 0 3px 8px rgba(20, 56, 68, 0.32);
+      transform: translateY(-1px);
+    }
+
+    #copy {
+      background: #ffffff;
+      color: #1c6e80;
+      border: 1px solid #84bdca;
+      box-shadow: 0 1px 2px rgba(20, 56, 68, 0.08);
+    }
+
+    #copy:hover {
+      background: #f4fafb;
+      border-color: #1c6e80;
+      box-shadow: 0 2px 6px rgba(20, 56, 68, 0.15);
+      transform: translateY(-1px);
+    }
+
+    /* ── CONFIG PANEL ── */
+    .config-panel {
+      flex: 1;
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+
+    .config-card {
+      background: #e9f3f5;
+      border: 1px solid #b3d4dc;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .config-card label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1c4f5c;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+
+    .config-card select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1.5px solid #84bdca;
+      background: #ffffff;
+      color: #163f49;
       font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      flex: none;
+    }
+
+    .config-card select:focus {
+      border-color: #1c6e80;
+    }
+
+    .config-info {
+      background: #e9f3f5;
+      border: 1px solid #b3d4dc;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: #1c4f5c;
+      margin-top: 4px;
+      line-height: 1.5;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Tab bar -->
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">AI Code Assist</div>
+  </div>
+
+  <!-- TAB BAR -->
   <div class="tab-bar">
     <button class="tab-btn active" data-tab="output-panel">Output</button>
     <button class="tab-btn" data-tab="config-panel">Configuration</button>
   </div>
 
-  <!-- Top control buttons -->
-  <div class="top-controls">
-    <button id="start">Start Inspect</button>
-    <button id="pause">Pause</button>
-    <button id="reset">Reset</button>
-  </div>
-
-  <!-- Output Tab Panel -->
+  <!-- OUTPUT TAB PANEL -->
   <div class="tab-panel active" id="output-panel">
+
+    <!-- TOP CONTROLS -->
+    <div class="top-controls">
+      <button id="start">Start Inspect</button>
+      <button id="pause">Pause</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <!-- CODE AREA -->
     <div class="code-wrapper">
       <pre><code id="output" class="language-typescript">Click on Start Inspect to select elements</code></pre>
     </div>
+
+    <!-- CUSTOM PROMPT BOX -->
+    <div class="custom-prompt-wrapper">
+      <textarea id="custom-prompt" placeholder="Optional: Add custom instructions... (e.g. add scrollIntoView before every action)"></textarea>
+    </div>
+
   </div>
 
-  <!-- Configuration Tab Panel -->
+  <!-- CONFIGURATION TAB PANEL -->
   <div class="tab-panel" id="config-panel">
     <div class="config-panel">
 
-      <div class="config-group">
+      <div class="config-card">
         <label>Framework</label>
         <select id="framework-select">
           <option value="playwright" selected>Playwright</option>
@@ -218,10 +332,10 @@
         </select>
       </div>
 
-      <div class="config-group">
+      <div class="config-card">
         <label>Language</label>
         <select id="language-select">
-          <option value="typescript" class="playwright-only" selected>TypeScript</option>
+          <option value="typescript" selected>TypeScript</option>
           <option value="javascript">JavaScript</option>
           <option value="java">Java</option>
           <option value="python">Python</option>
@@ -229,13 +343,17 @@
         </select>
       </div>
 
+      <div class="config-info">
+        💡 Settings are saved automatically and remembered next time you open the extension.
+      </div>
+
     </div>
   </div>
 
-  <!-- Bottom buttons -->
+  <!-- BOTTOM CONTROLS -->
   <div class="bottom-controls">
     <button id="generate">Generate</button>
-    <button id="copy">Copy</button>
+    <button id="copy">Copy Code</button>
   </div>
 
   <script src="libs/highlight.min.js"></script>

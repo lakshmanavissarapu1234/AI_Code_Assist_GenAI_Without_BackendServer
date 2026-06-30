@@ -241,10 +241,13 @@ chrome.runtime.onMessage.addListener((msg) => {
       ? seleniumSampleMap[language]
       : playwrightSampleMap[language];
 
+    // Read custom prompt
+    const customPrompt = document.getElementById("custom-prompt").value.trim();
+
     // Pick correct prompt
     const prompt = framework === "selenium"
-      ? getSeleniumPrompt(list, pageUrl, languageLabel, selectedSample)
-      : getPlaywrightPrompt(list, pageUrl, languageLabel, selectedSample);
+      ? getSeleniumPrompt(list, pageUrl, languageLabel, selectedSample, customPrompt)
+      : getPlaywrightPrompt(list, pageUrl, languageLabel, selectedSample, customPrompt);
 
     // Update syntax highlight class
     const output = document.getElementById("output");

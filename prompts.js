@@ -1,6 +1,6 @@
 // ─── PLAYWRIGHT PROMPT ────────────────────────────────────────────
 
-export function getPlaywrightPrompt(selectors, pageUrl, languageLabel, selectedSample) {
+export function getPlaywrightPrompt(selectors, pageUrl, languageLabel, selectedSample, customPrompt = "") {
   return `
 You are a senior Playwright automation framework architect.
 
@@ -62,12 +62,15 @@ Each selected element contains iframeOuterHTML and elementOuterHTML.
 - Use the PAGE URL above for deriving the class name.
 
 ${JSON.stringify(selectors, null, 2)}
+
+${customPrompt ? `CUSTOM INSTRUCTIONS FROM USER:
+${customPrompt}` : ""}
 `;
 }
 
 // ─── SELENIUM PROMPT ──────────────────────────────────────────────
 
-export function getSeleniumPrompt(selectors, pageUrl, languageLabel, selectedSample) {
+export function getSeleniumPrompt(selectors, pageUrl, languageLabel, selectedSample, customPrompt = "") {
   return `
 You are a senior Selenium automation framework architect.
 
@@ -125,5 +128,8 @@ Each selected element contains iframeOuterHTML and elementOuterHTML.
 - Use the PAGE URL above for deriving the class name.
 
 ${JSON.stringify(selectors, null, 2)}
+
+${customPrompt ? `CUSTOM INSTRUCTIONS FROM USER:
+${customPrompt}` : ""}
 `;
 }
