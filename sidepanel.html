@@ -55,9 +55,7 @@
       transition: color 0.2s ease;
     }
 
-    .tab-btn:hover {
-      color: #143844;
-    }
+    .tab-btn:hover { color: #143844; }
 
     .tab-btn.active {
       color: #143844;
@@ -107,9 +105,7 @@
       padding: 0 14px;
     }
 
-    .tab-panel.active {
-      display: flex;
-    }
+    .tab-panel.active { display: flex; }
 
     /* ── CODE AREA ── */
     .code-wrapper {
@@ -144,12 +140,8 @@
       margin: 0;
     }
 
-    /* Override highlight.js theme to match light teal background */
-    .hljs {
-      background: #e9f3f5 !important;
-      color: #163f49 !important;
-    }
-
+    /* Override highlight.js theme */
+    .hljs { background: #e9f3f5 !important; color: #163f49 !important; }
     .hljs-keyword, .hljs-built_in, .hljs-type { color: #1a5a8a !important; }
     .hljs-string, .hljs-attr { color: #8a4f1a !important; }
     .hljs-title, .hljs-title.class_, .hljs-title.function_ { color: #1c6e80 !important; }
@@ -179,14 +171,8 @@
       line-height: 1.3;
     }
 
-    #custom-prompt:focus {
-      border-color: #1c6e80;
-    }
-
-    #custom-prompt::placeholder {
-      color: #7fa9b3;
-      font-size: 10.5px;
-    }
+    #custom-prompt:focus { border-color: #1c6e80; }
+    #custom-prompt::placeholder { color: #7fa9b3; font-size: 10.5px; }
 
     /* ── BOTTOM CONTROLS ── */
     .bottom-controls {
@@ -232,7 +218,7 @@
     /* ── CONFIG PANEL ── */
     .config-panel {
       flex: 1;
-      padding: 16px 0;
+      padding: 12px 0;
       overflow-y: auto;
     }
 
@@ -240,8 +226,8 @@
       background: #e9f3f5;
       border: 1px solid #b3d4dc;
       border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
     }
 
     .config-card label {
@@ -251,33 +237,71 @@
       color: #1c4f5c;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     .config-card select {
       width: 100%;
-      padding: 9px 12px;
+      padding: 8px 10px;
       border-radius: 6px;
       border: 1.5px solid #84bdca;
       background: #ffffff;
       color: #163f49;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       cursor: pointer;
       outline: none;
-      flex: none;
     }
 
-    .config-card select:focus {
-      border-color: #1c6e80;
+    .config-card select:focus { border-color: #1c6e80; }
+
+    /* ── TEST STEPS TEXTAREA ── */
+    .config-card textarea {
+      width: 100%;
+      height: 140px;
+      border-radius: 6px;
+      border: 1.5px solid #84bdca;
+      background: #ffffff;
+      color: #163f49;
+      font-size: 11.5px;
+      font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+      padding: 8px 10px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+      transition: border 0.2s ease;
+    }
+
+    .config-card textarea:focus { border-color: #1c6e80; }
+
+    .config-card textarea::placeholder {
+      color: #7fa9b3;
+      font-size: 11px;
+    }
+
+    /* ── MODE INDICATOR ── */
+    .mode-indicator {
+      background: #e9f3f5;
+      border: 1px solid #b3d4dc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 10.5px;
+      color: #1c4f5c;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .mode-indicator .mode-label {
+      font-weight: 700;
+      color: #1c6e80;
     }
 
     .config-info {
       background: #e9f3f5;
       border: 1px solid #b3d4dc;
       border-radius: 6px;
-      padding: 10px 12px;
-      font-size: 11px;
+      padding: 8px 10px;
+      font-size: 10.5px;
       color: #1c4f5c;
       margin-top: 4px;
       line-height: 1.5;
@@ -301,19 +325,16 @@
   <!-- OUTPUT TAB PANEL -->
   <div class="tab-panel active" id="output-panel">
 
-    <!-- TOP CONTROLS -->
     <div class="top-controls">
       <button id="start">Start Inspect</button>
       <button id="pause">Pause</button>
       <button id="reset">Reset</button>
     </div>
 
-    <!-- CODE AREA -->
     <div class="code-wrapper">
       <pre><code id="output" class="language-typescript">Click on Start Inspect to select elements</code></pre>
     </div>
 
-    <!-- CUSTOM PROMPT BOX -->
     <div class="custom-prompt-wrapper">
       <textarea id="custom-prompt" placeholder="Optional: Add custom instructions... (e.g. add scrollIntoView before every action)"></textarea>
     </div>
@@ -323,6 +344,11 @@
   <!-- CONFIGURATION TAB PANEL -->
   <div class="tab-panel" id="config-panel">
     <div class="config-panel">
+
+      <!-- Mode indicator -->
+      <div class="mode-indicator" id="mode-indicator">
+        <span class="mode-label">Mode: POM Only</span> — Add test case steps below to also generate a Spec file.
+      </div>
 
       <div class="config-card">
         <label>Framework</label>
@@ -343,8 +369,13 @@
         </select>
       </div>
 
+      <div class="config-card">
+        <label>Test Case Steps <span style="font-weight:400;text-transform:none;font-size:10px;color:#7fa9b3;">(optional — paste your steps to generate Spec + POM)</span></label>
+        <textarea id="test-steps" placeholder="1. Navigate to login page&#10;2. Enter username 'john'&#10;3. Enter password 'secret'&#10;4. Click Login button&#10;5. Verify dashboard page is visible"></textarea>
+      </div>
+
       <div class="config-info">
-        💡 Settings are saved automatically and remembered next time you open the extension.
+        💡 Settings are saved automatically. If Test Case Steps are provided, Generate will produce both a Spec file and POM class together.
       </div>
 
     </div>
