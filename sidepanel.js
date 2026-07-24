@@ -49,6 +49,158 @@ const highlightLangMap = {
   csharp:     "csharp"
 };
 
+let lastCapturedSelectors = [];
+
+function normalizePageInfo(pageUrl) {
+  try {
+    const parsedUrl = new URL(pageUrl);
+    const pathname = parsedUrl.pathname && parsedUrl.pathname !== "/"
+      ? parsedUrl.pathname
+      : "";
+    const normalizedPath = `${parsedUrl.origin}${pathname}`.replace(/\/$/, "");
+
+    return {
+      pageId: `page:${parsedUrl.hostname}${pathname || "/"}`,
+      urlPattern: normalizedPath || parsedUrl.origin
+    };
+  } catch (error) {
+    return {
+      pageId: `page:${(pageUrl || "unknown").toString().slice(0, 80)}`,
+      urlPattern: pageUrl || "unknown"
+    };
+  }
+}
+
+function capitalizeFirstLetter(value) {
+  if (!value) return "Perform the action";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function inferMethodDescription(methodName) {
+  const normalizedText = methodName
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .trim();
+
+  if (!normalizedText) return "Perform the action defined in this page object method.";
+
+  return capitalizeFirstLetter(normalizedText.replace(/\s+/g, " "));
+}
+
+function extractMethodLocators(methodBody) {
+  const locatorRegex = /getBy(?:Role|Label|Placeholder)\([^)]*\)|locator\(['"`][^'"`]+['"`]\)|By\.(id|name|cssSelector|xpath|className|linkText|partialLinkText)\([^)]*\)|findElement\([^)]*\)|page\.locator\([^)]*\)|this\.page\.[\w\.]+\([^)]*\)/g;
+  const matches = [...methodBody.matchAll(locatorRegex)]
+    .map((match) => match[0].trim())
+    .filter(Boolean);
+
+  return [...new Set(matches)].slice(0, 3);
+}
+
+function extractMethodsFromPomCode(pageObjectCode) {
+  if (!pageObjectCode) return [];
+
+  const cleanedCode = pageObjectCode
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+
+  const lines = cleanedCode.split(/\r?\n/);
+  const methods = [];
+  const seenNames = new Set();
+
+  const methodPatterns = [
+    /^\s*(?:public|private|protected|async|static|final|override|virtual|synchronized|readonly)\s+(?:[\w<>\[\],.?]+)\s+([A-Za-z_][\w]*)\s*\([^;)]*\)\s*(?:=>|{|:)/,
+    /^\s*def\s+([A-Za-z_][\w]*)\s*\([^;)]*\)\s*:/,
+    /^\s*([A-Za-z_][\w]*)\s*\([^;)]*\)\s*(?:=>|{)/
+  ];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    let methodName = null;
+
+    for (const pattern of methodPatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        methodName = match[1];
+        break;
+      }
+    }
+
+    if (!methodName || /^(constructor|class|function|if|for|while|switch|try|catch|finally|return)$/i.test(methodName)) {
+      continue;
+    }
+
+    if (seenNames.has(methodName)) continue;
+    seenNames.add(methodName);
+
+    const bodySnippet = lines.slice(index, Math.min(index + 12, lines.length)).join("\n");
+    methods.push({
+      name: methodName,
+      description: inferMethodDescription(methodName),
+      locators: extractMethodLocators(bodySnippet)
+    });
+  }
+
+  return methods;
+}
+
+function buildPOMMemory(pageUrl, pageObjectCode, language) {
+  const { pageId, urlPattern } = normalizePageInfo(pageUrl);
+
+  return {
+    projectId: "default-project",
+    pageId,
+    urlPattern,
+    pageObjectCode,
+    methods: extractMethodsFromPomCode(pageObjectCode),
+    version: 1,
+    lastUpdated: new Date().toISOString(),
+    language
+  };
+}
+
+function loadExistingPOMMemory(pageUrl, callback) {
+  const { pageId } = normalizePageInfo(pageUrl);
+
+  chrome.storage.local.get(["pageObjectMemories"], (data) => {
+    const memories = data.pageObjectMemories || {};
+    callback(memories[pageId] || null);
+  });
+}
+
+function savePOMMemory(pageUrl, pageObjectCode, language) {
+  if (!pageObjectCode) return;
+
+  const memory = buildPOMMemory(pageUrl, pageObjectCode, language);
+
+  chrome.storage.local.get(["pageObjectMemories"], (data) => {
+    const memories = data.pageObjectMemories || {};
+    memories[memory.pageId] = memory;
+    chrome.storage.local.set({ pageObjectMemories: memories });
+  });
+}
+
+function serializeExistingPOMMemory(memory) {
+  if (!memory || !memory.methods || memory.methods.length === 0) {
+    return "";
+  }
+
+  const methodsBlock = memory.methods.map((method) => {
+    const locatorText = method.locators && method.locators.length > 0
+      ? ` | Locators: ${method.locators.join(", ")}`
+      : "";
+    return `- ${method.name}: ${method.description}${locatorText}`;
+  }).join("\n");
+
+  return [
+    "EXISTING PAGE OBJECT MEMORY FOR THIS PAGE",
+    `Page ID: ${memory.pageId}`,
+    `URL Pattern: ${memory.urlPattern}`,
+    "Existing methods:",
+    methodsBlock,
+    "Reuse these methods when they match the current test steps. Do not regenerate the whole POM unless you need to add a new action."
+  ].join("\n");
+}
+
 // ─── LOAD SAVED SETTINGS ON STARTUP ──────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -178,6 +330,25 @@ document.getElementById("generate").addEventListener("click", async () => {
   chrome.tabs.sendMessage(tab.id, { action: "GENERATE" });
 });
 
+// ─── CAPTURE DOM SNAPSHOT ───────────────────────────────────────
+
+document.getElementById("capture-dom").addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content.js"]
+    });
+  } catch (e) {
+    console.log("Content script already injected");
+  }
+
+  chrome.tabs.sendMessage(tab.id, { action: "CAPTURE_DOM" });
+  document.getElementById("output").textContent =
+    "Capturing filtered DOM snapshot...";
+});
+
 // ─── RESET ────────────────────────────────────────────────────────
 
 document.getElementById("reset").addEventListener("click", async () => {
@@ -203,7 +374,7 @@ document.getElementById("copy").addEventListener("click", () => {
 // ─── GEMINI API CALL ──────────────────────────────────────────────
 
 async function callGemini(prompt) {
-  const API_KEY = ""; // Replace with your actual API key
+  const API_KEY = "AQ.Ab8RN6IkWSxu2BGXrSyaOVHsgdHtdenzlzxv6IjasUtWl5YxXg"; // Replace with your actual API key
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
@@ -231,6 +402,7 @@ async function callGemini(prompt) {
 function parseCombinedResponse(rawText) {
   const pomMatch = rawText.match(/===POM_START===([\s\S]*?)===POM_END===/);
   const specMatch = rawText.match(/===SPEC_START===([\s\S]*?)===SPEC_END===/);
+  const jsonMatch = rawText.match(/===JSON_START===([\s\S]*?)===JSON_END===/);
 
   const pom = pomMatch
     ? pomMatch[1].trim().replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim()
@@ -240,13 +412,16 @@ function parseCombinedResponse(rawText) {
     ? specMatch[1].trim().replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim()
     : null;
 
-  return { pom, spec };
+  const json = jsonMatch
+    ? jsonMatch[1].trim().replace(/^```[a-zA-Z]*\n?/, "").replace(/```$/, "").trim()
+    : null;
+
+  return { pom, spec, json };
 }
 
 // ─── FORMAT DISPLAY OUTPUT ───────────────────────────────────────
 
-function formatCombinedOutput(spec, pom, languageLabel) {
-  const divider = `\n${"─".repeat(60)}\n`;
+function formatCombinedOutput(spec, pom, json, languageLabel) {
   return (
     `// ═══════════════════════════════════════════════════════════\n` +
     `// SPEC FILE\n` +
@@ -256,7 +431,12 @@ function formatCombinedOutput(spec, pom, languageLabel) {
     `// ═══════════════════════════════════════════════════════════\n` +
     `// POM CLASS\n` +
     `// ═══════════════════════════════════════════════════════════\n\n` +
-    pom
+    pom +
+    `\n\n` +
+    `// ═══════════════════════════════════════════════════════════\n` +
+    `// JSON METADATA\n` +
+    `// ═══════════════════════════════════════════════════════════\n\n` +
+    json
   );
 }
 
@@ -265,12 +445,32 @@ function formatCombinedOutput(spec, pom, languageLabel) {
 chrome.runtime.onMessage.addListener((msg) => {
   console.log("Message received in sidepanel:", msg);
 
+  if (msg.type === "DOM_CAPTURED") {
+    const list = msg.selectors || [];
+    const pageUrl = msg.pageUrl;
+    lastCapturedSelectors = list;
+
+    chrome.storage.local.set({ lastCapturedSelectors: list });
+
+    if (!list || list.length === 0) {
+      document.getElementById("output").textContent = "No elements selected for capture.";
+      return;
+    }
+
+    const memory = buildPOMMemory(pageUrl, JSON.stringify(list, null, 2), document.getElementById("language-select").value);
+    savePOMMemory(pageUrl, JSON.stringify(list, null, 2), document.getElementById("language-select").value);
+
+    document.getElementById("output").textContent =
+      `Captured filtered DOM snapshot for ${memory.pageId}.`;
+    return;
+  }
+
   if (msg.type === "ELEMENTS_GENERATED") {
-    const list    = msg.selectors;
+    const list    = (msg.selectors && msg.selectors.length > 0 ? msg.selectors : lastCapturedSelectors) || [];
     const pageUrl = msg.pageUrl;
 
     if (!list || list.length === 0) {
-      document.getElementById("output").textContent = "No elements selected.";
+      document.getElementById("output").textContent = "No elements selected or captured.";
       return;
     }
 
@@ -280,21 +480,18 @@ chrome.runtime.onMessage.addListener((msg) => {
     const customPrompt = document.getElementById("custom-prompt").value.trim();
     const testSteps    = document.getElementById("test-steps").value.trim();
 
-    // Validate Selenium + TypeScript
     if (framework === "selenium" && language === "typescript") {
       document.getElementById("output").textContent =
         "⚠️ Selenium does not support TypeScript.\nPlease select Java, Python, JavaScript, or C#.";
       return;
     }
 
-    // Validate Selenium + Spec (Spec only supported for Playwright currently)
     if (framework === "selenium" && testSteps.length > 0) {
       document.getElementById("output").textContent =
         "⚠️ Spec file generation is currently supported for Playwright only.\nPlease clear the Test Case Steps or switch to Playwright.";
       return;
     }
 
-    // Update syntax highlight class
     const output = document.getElementById("output");
     output.className = `language-${highlightLangMap[language] || "typescript"}`;
 
@@ -302,83 +499,95 @@ chrome.runtime.onMessage.addListener((msg) => {
       ? seleniumSampleMap[language]
       : playwrightSampleMap[language];
 
-    // ── BRANCH: POM + SPEC (combined) vs POM only ────────────────
-    if (testSteps.length > 0) {
+    loadExistingPOMMemory(pageUrl, (existingMemory) => {
+      const existingPOMContext = serializeExistingPOMMemory(existingMemory);
 
-      // POM + SPEC MODE
-      output.textContent = `Generating Spec + POM (${languageLabel})...`;
+      if (existingMemory) {
+        output.textContent = `Reusing saved POM for this page (${existingMemory.pageId})...`;
+      }
 
-      const prompt = getCombinedPrompt(
-        list,
-        pageUrl,
-        languageLabel,
-        selectedSample,
-        testSteps,
-        customPrompt
-      );
+      if (testSteps.length > 0) {
+        output.textContent = existingMemory
+          ? `Generating Spec + POM + JSON using saved page memory (${languageLabel})...`
+          : `Generating Spec + POM + JSON (${languageLabel})...`;
 
-      callGemini(prompt)
-        .then((rawResult) => {
-          const { pom, spec } = parseCombinedResponse(rawResult);
+        const prompt = getCombinedPrompt(
+          list,
+          pageUrl,
+          languageLabel,
+          selectedSample,
+          testSteps,
+          customPrompt,
+          existingPOMContext
+        );
 
-          if (!pom && !spec) {
-            // Fallback: markers not found, show raw output
-            output.textContent = rawResult
+        callGemini(prompt)
+          .then((rawResult) => {
+            const { pom, spec, json } = parseCombinedResponse(rawResult);
+
+            if (!pom && !spec && !json) {
+              output.textContent = rawResult
+                .replace(/^```[a-zA-Z]*\n?/, "")
+                .replace(/```$/, "")
+                .trim();
+            } else if (!spec && !json) {
+              output.textContent = pom;
+            } else {
+              output.textContent = formatCombinedOutput(
+                spec || "",
+                pom || "",
+                json || "No JSON output generated.",
+                languageLabel
+              );
+            }
+
+            if (pom) {
+              savePOMMemory(pageUrl, pom, language);
+            }
+
+            switchToOutputTab();
+
+            if (window.hljs) {
+              delete output.dataset.highlighted;
+              window.hljs.highlightElement(output);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            output.textContent = "Error generating code. Please try again.";
+          });
+      } else {
+        output.textContent = existingMemory
+          ? `Generating POM class using saved page memory (${languageLabel})...`
+          : `Generating POM class (${languageLabel})...`;
+
+        const prompt = framework === "selenium"
+          ? getSeleniumPrompt(list, pageUrl, languageLabel, selectedSample, existingPOMContext)
+          : getPlaywrightPrompt(list, pageUrl, languageLabel, selectedSample, existingPOMContext);
+
+        callGemini(prompt)
+          .then((result) => {
+            const cleanedResult = result
               .replace(/^```[a-zA-Z]*\n?/, "")
               .replace(/```$/, "")
               .trim();
-          } else if (!spec) {
-            // Only POM parsed
-            output.textContent = pom;
-          } else {
-            // Both parsed — show Spec first, then POM
-            output.textContent = formatCombinedOutput(spec, pom, languageLabel);
-          }
 
-          // Switch to Output tab
-          switchToOutputTab();
+            output.textContent = cleanedResult;
+            savePOMMemory(pageUrl, cleanedResult, language);
 
-          // Apply syntax highlighting
-          if (window.hljs) {
-            delete output.dataset.highlighted;
-            window.hljs.highlightElement(output);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          output.textContent = "Error generating code. Please try again.";
-        });
+            switchToOutputTab();
 
-    } else {
-
-      // POM ONLY MODE
-      output.textContent = `Generating POM class (${languageLabel})...`;
-
-      const prompt = framework === "selenium"
-        ? getSeleniumPrompt(list, pageUrl, languageLabel, selectedSample, customPrompt)
-        : getPlaywrightPrompt(list, pageUrl, languageLabel, selectedSample, customPrompt);
-
-      callGemini(prompt)
-        .then((result) => {
-          output.textContent = result
-            .replace(/^```[a-zA-Z]*\n?/, "")
-            .replace(/```$/, "")
-            .trim();
-
-          // Switch to Output tab
-          switchToOutputTab();
-
-          // Apply syntax highlighting
-          if (window.hljs) {
-            delete output.dataset.highlighted;
-            window.hljs.highlightElement(output);
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          output.textContent = "Error generating code. Please try again.";
-        });
-    }
+            if (window.hljs) {
+              delete output.dataset.highlighted;
+              window.hljs.highlightElement(output);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            output.textContent = "Error generating code. Please try again.";
+          });
+      }
+    });
   }
 });
 

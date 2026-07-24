@@ -1,6 +1,6 @@
 // ─── PLAYWRIGHT PROMPT ────────────────────────────────────────────
 
-export function getPlaywrightPrompt(selectors, pageUrl, languageLabel, selectedSample) {
+export function getPlaywrightPrompt(selectors, pageUrl, languageLabel, selectedSample, existingPOMContext = "") {
   return `
 You are a senior Playwright automation framework architect.
 
@@ -15,6 +15,14 @@ REQUIREMENTS:
 - Do not generate helper methods.
 - Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
 - Do not invent locators.
+${existingPOMContext ? `
+${existingPOMContext}
+
+IMPORTANT:
+- Reuse the existing methods above whenever they match the selected elements.
+- Do not regenerate the whole POM unless a new action is required.
+- If a relevant method already exists, keep it and add only new methods for genuinely new actions.
+` : ""}
 
 IMPLEMENTATION GUIDELINES:
 - Derive meaningful page class names from the page URL.
@@ -67,7 +75,7 @@ ${JSON.stringify(selectors, null, 2)}
 
 // ─── SELENIUM PROMPT ──────────────────────────────────────────────
 
-export function getSeleniumPrompt(selectors, pageUrl, languageLabel, selectedSample) {
+export function getSeleniumPrompt(selectors, pageUrl, languageLabel, selectedSample, existingPOMContext = "") {
   return `
 You are a senior Selenium automation framework architect.
 
@@ -80,6 +88,14 @@ REQUIREMENTS:
 - Do not generate helper methods.
 - Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
 - Do not invent locators.
+${existingPOMContext ? `
+${existingPOMContext}
+
+IMPORTANT:
+- Reuse the existing methods above whenever they match the selected elements.
+- Do not regenerate the whole POM unless a new action is required.
+- If a relevant method already exists, keep it and add only new methods for genuinely new actions.
+` : ""}
 
 IMPLEMENTATION GUIDELINES:
 - Derive meaningful page class names from the page URL.
@@ -119,8 +135,9 @@ PAGE URL:
 ${pageUrl}
 
 DOM CONTENT:
-Each selected element contains iframeOuterHTML and elementOuterHTML.
-- Use elementOuterHTML as primary source of truth.
+Each selected element contains iframeOuterHTML, elementOuterHTML, and elementSnapshot.
+- Use elementOuterHTML and elementSnapshot as primary sources of truth.
+- elementSnapshot contains filtered, valid attributes and visible text, and excludes scripts/styles.
 - iframeOuterHTML is not used for Selenium (no FrameLocator in Selenium).
 - Use the PAGE URL above for deriving the class name.
 
@@ -130,7 +147,7 @@ ${JSON.stringify(selectors, null, 2)}
 
 // ─── COMBINED POM + SPEC PROMPT (Playwright only, for now) ───────
 
-export function getCombinedPrompt(selectors, pageUrl, languageLabel, selectedSample, testSteps, customPrompt = "") {
+export function getCombinedPrompt(selectors, pageUrl, languageLabel, selectedSample, testSteps, customPrompt = "", existingPOMContext = "") {
   return `
 You are a senior Playwright automation framework architect.
 
@@ -152,6 +169,14 @@ REQUIREMENTS:
 - Do not generate helper methods.
 - Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
 - Do not invent locators.
+${existingPOMContext ? `
+${existingPOMContext}
+
+IMPORTANT:
+- Reuse the existing methods above whenever they match the selected elements.
+- Do not regenerate the whole POM unless a new action is required.
+- If a relevant method already exists, keep it and add only new methods for genuinely new actions.
+` : ""}
 
 IMPLEMENTATION GUIDELINES:
 - Derive meaningful page class names from the page URL.
@@ -196,8 +221,9 @@ PAGE URL:
 ${pageUrl}
 
 DOM CONTENT:
-Each selected element contains iframeOuterHTML and elementOuterHTML.
-- Use elementOuterHTML as primary source of truth.
+Each selected element contains iframeOuterHTML, elementOuterHTML, and elementSnapshot.
+- Use elementOuterHTML and elementSnapshot as primary sources of truth.
+- elementSnapshot contains filtered, valid attributes and visible text, and excludes scripts/styles.
 - Use iframeOuterHTML only for FrameLocator generation.
 - Use the PAGE URL above for deriving the class name.
 
@@ -232,19 +258,13 @@ SPEC REQUIREMENTS:
   assertion (expect(...)) immediately after the relevant action. Use the most
   appropriate assertion type (toBeVisible, toHaveText, toHaveTitle, toHaveValue,
   toBeChecked, toHaveURL, etc.) based on the wording of the step.
-- Wrap the test in a single test() block (or framework-equivalent) with a
-  descriptive test name derived from the test steps.
-- Do not add extra setup/teardown beyond page navigation unless the test steps
-  explicitly mention it.
-
-TEST CASE STEPS (provided by user):
-${testSteps}
-
-${customPrompt ? `CUSTOM INSTRUCTIONS FROM USER:
-${customPrompt}` : ""}
-
-═══════════════════════════════════════════
-OUTPUT FORMAT — STRICT
+- Do NOT declare or define the abc data object in the spec itself.
+  The spec should reference data using abc.fieldName only, for example:
+  await page.fillNameInput(abc.userName);
+  await page.fillEmailInput(abc.email);
+  await page.fillPhoneInput(abc.phone);
+- Output the abc data object only inside the Stage 2 JSON block.
+  The JSON block should contain the object content only, not a const declaration.
 ═══════════════════════════════════════════
 
 You MUST wrap each stage's code output with these exact markers, with nothing else
@@ -258,5 +278,9 @@ outside the code blocks inside each marker pair. Do not use markdown code fences
 ===SPEC_START===
 <the complete spec file code from Stage 2 goes here>
 ===SPEC_END===
+
+===JSON_START===
+<the complete JSON metadata for the test case goes here>
+===JSON_END===
 `;
 }
