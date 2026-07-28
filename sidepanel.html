@@ -108,6 +108,35 @@
     .tab-panel.active { display: flex; }
 
     /* ── CODE AREA ── */
+    .output-subtabs {
+      display: flex;
+      gap: 6px;
+      margin: 6px 0 0;
+      flex-shrink: 0;
+    }
+
+    .output-subtabs.hidden {
+      display: none;
+    }
+
+    .output-subtab {
+      flex: 1;
+      padding: 5px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      background: #f4fafb;
+      color: #1c4f5c;
+      border: 1px solid #84bdca;
+    }
+
+    .output-subtab.active {
+      background: #1c6e80;
+      color: #ffffff;
+      border-color: #1c6e80;
+    }
+
     .code-wrapper {
       flex: 1;
       margin: 6px 0 0;
@@ -330,6 +359,12 @@
       <button id="pause">Pause</button>
       <button id="reset">Reset</button>
       <button id="capture-dom">Capture DOM</button>
+    </div>
+
+    <div class="output-subtabs hidden">
+      <button class="output-subtab active" data-output-tab="spec">Spec File</button>
+      <button class="output-subtab" data-output-tab="pom">POM Class</button>
+      <button class="output-subtab" data-output-tab="json">JSON File</button>
     </div>
 
     <div class="code-wrapper">

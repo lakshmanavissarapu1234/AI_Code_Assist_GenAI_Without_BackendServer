@@ -50,6 +50,12 @@ const highlightLangMap = {
 };
 
 let lastCapturedSelectors = [];
+let activeOutputTab = "spec";
+const outputContents = {
+  spec: "Click on Start Inspect to select elements",
+  pom: "No POM generated yet.",
+  json: "No JSON generated yet."
+};
 
 function normalizePageInfo(pageUrl) {
   try {
@@ -74,6 +80,56 @@ function normalizePageInfo(pageUrl) {
 function capitalizeFirstLetter(value) {
   if (!value) return "Perform the action";
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function renderActiveOutput(language) {
+  const output = document.getElementById("output");
+  if (!output) return;
+
+  const selectedLanguage = language || document.getElementById("language-select")?.value || "typescript";
+  output.textContent = outputContents[activeOutputTab] || "";
+  output.className = `language-${highlightLangMap[selectedLanguage] || "typescript"}`;
+
+  if (window.hljs) {
+    delete output.dataset.highlighted;
+    window.hljs.highlightElement(output);
+  }
+}
+
+function setActiveOutputTab(tab, language) {
+  activeOutputTab = tab;
+
+  document.querySelectorAll(".output-subtab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.outputTab === tab);
+  });
+
+  renderActiveOutput(language);
+}
+
+function updateOutputContent(tab, content, language) {
+  outputContents[tab] = content;
+  if (activeOutputTab === tab) {
+    renderActiveOutput(language);
+  }
+}
+
+function showOutputMessage(message, language) {
+  updateOutputContent(activeOutputTab, message, language);
+}
+
+function setOutputTabsVisible(visible) {
+  const container = document.querySelector(".output-subtabs");
+  if (!container) return;
+  container.classList.toggle("hidden", !visible);
+}
+
+function resetOutputPanel(language) {
+  activeOutputTab = "spec";
+  outputContents.spec = "Click on Start Inspect to select elements";
+  outputContents.pom = "No POM generated yet.";
+  outputContents.json = "No JSON generated yet.";
+  setOutputTabsVisible(false);
+  renderActiveOutput(language);
 }
 
 function inferMethodDescription(methodName) {
@@ -204,6 +260,12 @@ function serializeExistingPOMMemory(memory) {
 // ─── LOAD SAVED SETTINGS ON STARTUP ──────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".output-subtab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setActiveOutputTab(btn.dataset.outputTab, document.getElementById("language-select")?.value || "typescript");
+    });
+  });
+
   chrome.storage.local.get(["language", "framework"], (data) => {
     if (data.language) {
       document.getElementById("language-select").value = data.language;
@@ -228,6 +290,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".top-controls").style.display = "none";
     document.querySelector(".bottom-controls").style.visibility = "hidden";
   }
+
+  setOutputTabsVisible(false);
+  setActiveOutputTab("spec", document.getElementById("language-select")?.value || "typescript");
 });
 
 // ─── UPDATE MODE INDICATOR ───────────────────────────────────────
@@ -310,8 +375,7 @@ document.getElementById("start").addEventListener("click", async () => {
     chrome.tabs.sendMessage(tab.id, { action: "START" });
   }, 100);
 
-  document.getElementById("output").textContent =
-    "Inspect mode ON (hover and select elements)";
+  showOutputMessage("Inspect mode ON (hover and select elements)");
 });
 
 // ─── PAUSE ────────────────────────────────────────────────────────
@@ -319,14 +383,14 @@ document.getElementById("start").addEventListener("click", async () => {
 document.getElementById("pause").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: "STOP" });
-  document.getElementById("output").textContent =
-    "Inspect mode PAUSED (selections retained)";
+  showOutputMessage("Inspect mode PAUSED (selections retained)");
 });
 
 // ─── GENERATE ────────────────────────────────────────────────────
 
 document.getElementById("generate").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  setOutputTabsVisible(false);
   chrome.tabs.sendMessage(tab.id, { action: "GENERATE" });
 });
 
@@ -345,8 +409,7 @@ document.getElementById("capture-dom").addEventListener("click", async () => {
   }
 
   chrome.tabs.sendMessage(tab.id, { action: "CAPTURE_DOM" });
-  document.getElementById("output").textContent =
-    "Capturing filtered DOM snapshot...";
+  showOutputMessage("Capturing filtered DOM snapshot...");
 });
 
 // ─── RESET ────────────────────────────────────────────────────────
@@ -354,14 +417,13 @@ document.getElementById("capture-dom").addEventListener("click", async () => {
 document.getElementById("reset").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   chrome.tabs.sendMessage(tab.id, { action: "RESET" });
-  document.getElementById("output").textContent =
-    "Reset completed (all selections cleared)";
+  resetOutputPanel(document.getElementById("language-select")?.value || "typescript");
 });
 
 // ─── COPY ─────────────────────────────────────────────────────────
 
 document.getElementById("copy").addEventListener("click", () => {
-  const text = document.getElementById("output").textContent;
+  const text = outputContents[activeOutputTab] || document.getElementById("output").textContent || "";
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
     document.getElementById("copy").textContent = "Copied!";
@@ -374,7 +436,7 @@ document.getElementById("copy").addEventListener("click", () => {
 // ─── GEMINI API CALL ──────────────────────────────────────────────
 
 async function callGemini(prompt) {
-  const API_KEY = "AQ.Ab8RN6IkWSxu2BGXrSyaOVHsgdHtdenzlzxv6IjasUtWl5YxXg"; // Replace with your actual API key
+  const API_KEY = "AQ.Ab8RN6KjCDSP9fAD6_8zB2aMPKud48tU4vHr0gFhLWnC4vILMA"; // Replace with your actual API key
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
@@ -421,23 +483,8 @@ function parseCombinedResponse(rawText) {
 
 // ─── FORMAT DISPLAY OUTPUT ───────────────────────────────────────
 
-function formatCombinedOutput(spec, pom, json, languageLabel) {
-  return (
-    `// ═══════════════════════════════════════════════════════════\n` +
-    `// SPEC FILE\n` +
-    `// ═══════════════════════════════════════════════════════════\n\n` +
-    spec +
-    `\n\n` +
-    `// ═══════════════════════════════════════════════════════════\n` +
-    `// POM CLASS\n` +
-    `// ═══════════════════════════════════════════════════════════\n\n` +
-    pom +
-    `\n\n` +
-    `// ═══════════════════════════════════════════════════════════\n` +
-    `// JSON METADATA\n` +
-    `// ═══════════════════════════════════════════════════════════\n\n` +
-    json
-  );
+function formatCombinedOutput(spec, pom, json) {
+  return [spec, pom, json].filter(Boolean).join("\n\n");
 }
 
 // ─── HANDLE MESSAGES FROM content.js ─────────────────────────────
@@ -453,15 +500,14 @@ chrome.runtime.onMessage.addListener((msg) => {
     chrome.storage.local.set({ lastCapturedSelectors: list });
 
     if (!list || list.length === 0) {
-      document.getElementById("output").textContent = "No elements selected for capture.";
+      showOutputMessage("No elements selected for capture.");
       return;
     }
 
     const memory = buildPOMMemory(pageUrl, JSON.stringify(list, null, 2), document.getElementById("language-select").value);
     savePOMMemory(pageUrl, JSON.stringify(list, null, 2), document.getElementById("language-select").value);
 
-    document.getElementById("output").textContent =
-      `Captured filtered DOM snapshot for ${memory.pageId}.`;
+    showOutputMessage(`Captured filtered DOM snapshot for ${memory.pageId}.`);
     return;
   }
 
@@ -470,7 +516,7 @@ chrome.runtime.onMessage.addListener((msg) => {
     const pageUrl = msg.pageUrl;
 
     if (!list || list.length === 0) {
-      document.getElementById("output").textContent = "No elements selected or captured.";
+      showOutputMessage("No elements selected or captured.");
       return;
     }
 
@@ -481,14 +527,12 @@ chrome.runtime.onMessage.addListener((msg) => {
     const testSteps    = document.getElementById("test-steps").value.trim();
 
     if (framework === "selenium" && language === "typescript") {
-      document.getElementById("output").textContent =
-        "⚠️ Selenium does not support TypeScript.\nPlease select Java, Python, JavaScript, or C#.";
+      showOutputMessage("⚠️ Selenium does not support TypeScript.\nPlease select Java, Python, JavaScript, or C#.");
       return;
     }
 
     if (framework === "selenium" && testSteps.length > 0) {
-      document.getElementById("output").textContent =
-        "⚠️ Spec file generation is currently supported for Playwright only.\nPlease clear the Test Case Steps or switch to Playwright.";
+      showOutputMessage("⚠️ Spec file generation is currently supported for Playwright only.\nPlease clear the Test Case Steps or switch to Playwright.");
       return;
     }
 
@@ -503,13 +547,13 @@ chrome.runtime.onMessage.addListener((msg) => {
       const existingPOMContext = serializeExistingPOMMemory(existingMemory);
 
       if (existingMemory) {
-        output.textContent = `Reusing saved POM for this page (${existingMemory.pageId})...`;
+        showOutputMessage(`Reusing saved POM for this page (${existingMemory.pageId})...`);
       }
 
       if (testSteps.length > 0) {
-        output.textContent = existingMemory
+        showOutputMessage(existingMemory
           ? `Generating Spec + POM + JSON using saved page memory (${languageLabel})...`
-          : `Generating Spec + POM + JSON (${languageLabel})...`;
+          : `Generating Spec + POM + JSON (${languageLabel})...`, language);
 
         const prompt = getCombinedPrompt(
           list,
@@ -526,19 +570,26 @@ chrome.runtime.onMessage.addListener((msg) => {
             const { pom, spec, json } = parseCombinedResponse(rawResult);
 
             if (!pom && !spec && !json) {
-              output.textContent = rawResult
+              updateOutputContent("spec", rawResult
                 .replace(/^```[a-zA-Z]*\n?/, "")
                 .replace(/```$/, "")
-                .trim();
+                .trim(), language);
+              updateOutputContent("pom", "No POM generated.", language);
+              updateOutputContent("json", "No JSON generated.", language);
+              setOutputTabsVisible(true);
+              renderActiveOutput(language);
             } else if (!spec && !json) {
-              output.textContent = pom;
+              updateOutputContent("spec", spec || "No spec generated.", language);
+              updateOutputContent("pom", pom || "No POM generated.", language);
+              updateOutputContent("json", json || "No JSON generated.", language);
+              setOutputTabsVisible(true);
+              renderActiveOutput(language);
             } else {
-              output.textContent = formatCombinedOutput(
-                spec || "",
-                pom || "",
-                json || "No JSON output generated.",
-                languageLabel
-              );
+              updateOutputContent("spec", spec || "No spec generated.", language);
+              updateOutputContent("pom", pom || "No POM generated.", language);
+              updateOutputContent("json", json || "No JSON generated.", language);
+              setOutputTabsVisible(true);
+              renderActiveOutput(language);
             }
 
             if (pom) {
@@ -554,12 +605,12 @@ chrome.runtime.onMessage.addListener((msg) => {
           })
           .catch((err) => {
             console.error(err);
-            output.textContent = "Error generating code. Please try again.";
+            showOutputMessage("Error generating code. Please try again.", language);
           });
       } else {
-        output.textContent = existingMemory
+        showOutputMessage(existingMemory
           ? `Generating POM class using saved page memory (${languageLabel})...`
-          : `Generating POM class (${languageLabel})...`;
+          : `Generating POM class (${languageLabel})...`);
 
         const prompt = framework === "selenium"
           ? getSeleniumPrompt(list, pageUrl, languageLabel, selectedSample, existingPOMContext)
@@ -572,7 +623,11 @@ chrome.runtime.onMessage.addListener((msg) => {
               .replace(/```$/, "")
               .trim();
 
-            output.textContent = cleanedResult;
+            updateOutputContent("pom", cleanedResult, language);
+            updateOutputContent("spec", "No spec generated.", language);
+            updateOutputContent("json", "No JSON generated.", language);
+            setOutputTabsVisible(true);
+            renderActiveOutput(language);
             savePOMMemory(pageUrl, cleanedResult, language);
 
             switchToOutputTab();
@@ -584,7 +639,7 @@ chrome.runtime.onMessage.addListener((msg) => {
           })
           .catch((err) => {
             console.error(err);
-            output.textContent = "Error generating code. Please try again.";
+            showOutputMessage("Error generating code. Please try again.", language);
           });
       }
     });

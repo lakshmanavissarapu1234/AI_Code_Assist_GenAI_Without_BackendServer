@@ -145,13 +145,13 @@ ${JSON.stringify(selectors, null, 2)}
 `;
 }
 
-// ─── COMBINED POM + SPEC PROMPT (Playwright only, for now) ───────
+// ─── COMBINED POM + SPEC + TEST DATA PROMPT (Playwright only, for now) ───────
 
 export function getCombinedPrompt(selectors, pageUrl, languageLabel, selectedSample, testSteps, customPrompt = "", existingPOMContext = "") {
   return `
 You are a senior Playwright automation framework architect.
 
-You must complete this task in TWO ORDERED STAGES, both inside this single response.
+You must complete this task in THREE ORDERED STAGES, all inside this single response.
 Do not skip a stage. Do not merge the stages. Follow the exact output format below.
 
 ═══════════════════════════════════════════
@@ -169,6 +169,8 @@ REQUIREMENTS:
 - Do not generate helper methods.
 - Use only information available in pageUrl, iframeOuterHTML, and elementOuterHTML.
 - Do not invent locators.
+- POM generation must be based only on the captured DOM and selected elements.
+- Do not use the test case steps to invent or rename methods.
 ${existingPOMContext ? `
 ${existingPOMContext}
 
@@ -233,18 +235,17 @@ ${JSON.stringify(selectors, null, 2)}
 STAGE 2 — GENERATE THE SPEC (TEST) FILE
 ═══════════════════════════════════════════
 
-Using ONLY the exact method names you just wrote in the POM class above in Stage 1,
-generate a complete Playwright test spec file in ${languageLabel} that implements
-the test case steps provided below.
+Using ONLY the exact method names you wrote in Stage 1, generate a complete Playwright
+test spec file in ${languageLabel} that implements the test case steps provided below.
 
 SPEC REQUIREMENTS:
-- Output ONLY valid ${languageLabel} test code using the Playwright test runner
-  (@playwright/test for TS/JS, pytest-playwright style for Python, JUnit/NUnit style
-  for Java/C# as appropriate for ${languageLabel}).
+- Output ONLY valid ${languageLabel} test code using the Playwright test runner.
 - Import and instantiate the POM class from Stage 1 (assume it is exported from a
   relative path like '../pages/<ClassName>').
+- Spec generation must be based only on the test case steps.
+- Do not inspect the DOM or infer additional steps from the page structure.
 - Call ONLY the POM methods that are actually needed to satisfy the test steps below.
-  Do NOT call every method in the POM — only the relevant ones for this test.
+- Do NOT call every method in the POM — only the relevant ones for this test.
 - Do NOT invent any method name. Every method call in the spec MUST exactly match
   a method name that exists in the POM class you wrote in Stage 1, including exact
   casing. If a required action has no matching method in the POM, add a one-line
@@ -263,8 +264,27 @@ SPEC REQUIREMENTS:
   await page.fillNameInput(abc.userName);
   await page.fillEmailInput(abc.email);
   await page.fillPhoneInput(abc.phone);
-- Output the abc data object only inside the Stage 2 JSON block.
-  The JSON block should contain the object content only, not a const declaration.
+- The spec must not influence the POM or the JSON output.
+
+═══════════════════════════════════════════
+STAGE 3 — GENERATE THE TEST DATA (JSON) FILE
+═══════════════════════════════════════════
+
+Generate a standalone JSON object containing test data values that appear explicitly
+in the test case steps below.
+
+JSON REQUIREMENTS:
+- Output ONLY valid JSON.
+- JSON generation must be based only on values explicitly present in the test case steps.
+- Do not derive values from the DOM or from the POM methods.
+- Do not include selectors, locators, or method names.
+- Use descriptive keys such as userName, email, phone, firstName, lastName, date, or country.
+- If a value is not explicitly present in the test steps, omit it from the JSON object.
+- The JSON output must not influence the POM or the spec.
+
+TEST CASE STEPS:
+${testSteps || "No explicit test steps provided."}
+
 ═══════════════════════════════════════════
 
 You MUST wrap each stage's code output with these exact markers, with nothing else
