@@ -436,7 +436,7 @@ document.getElementById("copy").addEventListener("click", () => {
 // ─── GEMINI API CALL ──────────────────────────────────────────────
 
 async function callGemini(prompt) {
-  const API_KEY = "AQ.Ab8RN6KjCDSP9fAD6_8zB2aMPKud48tU4vHr0gFhLWnC4vILMA"; // Replace with your actual API key
+  const API_KEY = ""; // Replace with your actual API key
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`,
