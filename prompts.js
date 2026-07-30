@@ -52,6 +52,30 @@ ACTION AND NAMING PATTERN:
 - date picker → select → select<ElementName>Date()
 - file upload → upload → upload<ElementName>()
 
+BUSINESS METHOD GENERATION:
+- After generating or reusing Element Methods, analyze the test case steps.
+- If one or more existing/new Element Methods together satisfy a business action in the test case, generate a reusable Logic Method in the POM.
+- The Logic Method must call the Element Methods instead of using locators directly.
+- Reuse an existing Logic Method if it already represents the same workflow.
+- Do not generate duplicate Logic Methods.
+
+Example:
+Existing Element Methods:
+fillUsernameInput()
+fillPasswordInput()
+clickLoginButton()
+
+Test Step:
+Login with valid credentials
+
+Generate:
+async login(userName, password) {
+    await this.fillUsernameInput(userName);
+    await this.fillPasswordInput(password);
+    await this.clickLoginButton();
+    console.log("Logged in successfully");
+}
+
 CLASS PATTERN:
 - Follow the SAMPLE_POM class structure exactly.
 - Generate FrameLocator properties only when iframe elements exist.
@@ -171,6 +195,15 @@ REQUIREMENTS:
 - Do not invent locators.
 - POM generation must be based only on the captured DOM and selected elements.
 - Do not use the test case steps to invent or rename methods.
+
+BUSINESS METHOD RULE:
+- Test case steps must NOT be used to invent new Element Methods or locators.
+- Before generating a new Logic Method, check whether an existing Logic Method already satisfies the business action. Reuse it if available.
+- Otherwise, if two or more existing or newly generated Element Methods together satisfy a single business action in the test case, generate a reusable Logic Method in the POM.
+- Logic Methods must reuse existing Element Methods and must never contain locators directly.
+- The generated Spec must use the Logic Method instead of calling multiple Element Methods directly.
+- Logic Method names should be derived from the business action described in the test case (e.g. login(), registerUser(), searchProduct(), checkout()) rather than from UI element names.
+
 ${existingPOMContext ? `
 ${existingPOMContext}
 
@@ -245,6 +278,8 @@ SPEC REQUIREMENTS:
 - Spec generation must be based only on the test case steps.
 - Do not inspect the DOM or infer additional steps from the page structure.
 - Call ONLY the POM methods that are actually needed to satisfy the test steps below.
+- If a Logic Method exists for a business action, always use the Logic Method in the Spec instead of calling multiple Element Methods.
+- If the required Element Methods already exist in the generated or reused POM and together represent a business action, generate a reusable Logic Method in the POM and use that Logic Method in the Spec.
 - Do NOT call every method in the POM — only the relevant ones for this test.
 - Do NOT invent any method name. Every method call in the spec MUST exactly match
   a method name that exists in the POM class you wrote in Stage 1, including exact
@@ -265,6 +300,12 @@ SPEC REQUIREMENTS:
   await page.fillEmailInput(abc.email);
   await page.fillPhoneInput(abc.phone);
 - The spec must not influence the POM or the JSON output.
+
+METHOD CONSISTENCY:
+- Every method used in the Spec must exist in the generated or reused POM.
+- Never invent method names that do not exist in the POM.
+- The Spec must always use Logic Methods when available.
+- Element Methods should only be used directly when no suitable Logic Method exists.
 
 ═══════════════════════════════════════════
 STAGE 3 — GENERATE THE TEST DATA (JSON) FILE
